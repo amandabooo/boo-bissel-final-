@@ -1,0 +1,102 @@
+---
+title: "Final Project Stat131A"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+```
+
+Dataset 
+```{r}
+chol <- read.csv("cholangitis-data.csv")
+str(chol)
+chol[sapply(chol, is.character)] <- lapply(chol[sapply(chol, is.character)], as.factor)
+
+chol$stage <-as.factor(chol$stage)
+chol$id <- as.factor(chol$id)
+```
+Visualization
+```{r}
+chol %>% 
+  ggplot(aes(drug, n_days)) + geom_boxplot()
+```
+
+
+```{r}
+chol %>% 
+  ggplot(aes(status)) + geom_bar() +
+  facet_grid(.~drug)
+```
+It is intresting to note that with the D-penicillamine drug and placebo drug, the results are fairly the same. There are almost the same number of alive and dead patiens for both as well as those who have recieved a liver transplant. 
+
+```{r}
+chol %>% 
+  ggplot(aes(status, age/365)) + geom_boxplot()
+```
+The key point to note in the boxplot isthat the younger aged demogrpahic is  the ones who have recieved the liver transplant. 
+
+```{r}
+chol %>% 
+  ggplot(aes(status)) + geom_bar() + facet_grid(.~sex)
+
+```
+There are more female patients that survied compared to male though there was a lot more female patients to begin with. 
+
+```{r}
+cont <- 
+
+```
+
+
+
+Multivariable Regression
+```{r}
+noCL <- chol %>% 
+  filter(status != 'CL')
+```
+Filtering out the status of the patients to remove anybody who recieved a liver transplant because it cures the patients with primary biliary cholangitis. 
+
+```{r}
+rmna <- na.omit(noCL)
+chol1 <- rmna %>% 
+  mutate(age = age/365)
+```
+We are removing all of the NA values that would skew our results. We are also dividing age by 365 to make the data a lot easier to understand. 
+
+
+```{r}
+
+quant = quantile(is.numeric(chol1), prob = c(.25,.75), na.rm = FALSE)
+
+IQR <- IQR(chol1)
+lower <- quant[1] - 1.5* IQR
+upper <- quant[2]  + 1.5*IQR
+
+na.outliers <- subset(chol1, is.numeric(chol1) > lower & is.numeric(chol1) < upper)
+```
+We are diltering our data by quantiles 
+
+
+
+```{r}
+# cor(chol$age, chol$n_days)
+# m1 <- lm(n_days ~ age + status, data = chol) 
+# hist(chol$n_days)
+
+```
+
+
+
+graph drug treatments and survival by disease stage 
+
+find out how to remove outliers from dataset first before grphing 
+
+graph density plot for everything that is not factor compaing it to drug 
+
+log all results and facet wrap it to see a better normal distribution 
+
+
