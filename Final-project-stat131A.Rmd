@@ -21,7 +21,8 @@ chol$id <- as.factor(chol$id)
 #removing the NA cakuse and dividing age by 365 to make more legible 
 chol1 <- rmna %>% 
   mutate(age = age/365)
-rmna <- na.omit(noCL)
+rmna <- chol %>% 
+  na.omit(noCL)
 #str(chol)
 ```
 We are removing all of the NA values that would skew our results. We are also dividing age by 365 to make the data a lot easier to understand. 
