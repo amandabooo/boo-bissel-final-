@@ -8,6 +8,7 @@ knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60), tidy=TRUE)
 library(tidyr)
 library(tidyverse)
 library(ggplot2)
+
 ```
 
 
@@ -112,17 +113,40 @@ quantile_limits <- function(df, lb, ub){
 ci_cont <- quantile_limits(cont_var, 0.001, 0.999)
 ci_cont
 
+ci_95 <- quantile_limits(cont_var, 0.025, 0.975)
+
 
 ```
 We are filtering our data by quantiles to prevent any unnecessary outliers from skewing the data.
 
+```{r}
+bil <- ggplot(chol1, aes(x = bilirubin, color = drug)) + geom_density() + ggtitle("Bilirubin Over Time") + theme(axis.text.x = element_text(angle = 45)) 
 
+chl <- ggplot(chol1, aes(x = cholesterol, color = drug)) + geom_density() + ggtitle("Cholesterol Over Time") + theme(axis.text.x = element_text(angle = 45))
+
+alb <- ggplot(chol1, aes(x = albumin, color = drug)) + geom_density() + ggtitle("Albumin Over Time") + theme(axis.text.x = element_text(angle = 45))
+
+cop <- ggplot(chol1, aes(x = copper, color = drug)) + geom_density() + ggtitle("Copper Over Time") + theme(axis.text.x = element_text(angle = 45))
+
+plot_grid(b, chl, a, cu)
+```
+```{r}
+library(leaps)
+no_id_refined_logs <- logs_only[, -c(1)]
+cholregsub <- regsubsets(n_days ~., no_id_refined_logs, nvmax = 28) 
+```
 
 ```{r}
-# cor(chol$age, chol$n_days)
-# m1 <- lm(n_days ~ age + status, data = chol) 
-# hist(chol$n_days)
+cont_var_trans <- refined_df[, -c(1, 3, 4, 6:12, 14:17, 20)]
+logs_only <- refined_df[, -c(11, 12, 14:17)]
+full_lm <- lm(n_days ~ ., data = logs_only[, -c(1)])
+summary(full_lm)
+```
 
+```{r}
+summary(lm(formula = n_days ~ drug + ascites + edema + albumin + platelets + 
+    stage + log_bilirubin + log_cholesterol + log_alk_phos + log_sgot, data = logs_only[, 
+    -c(1)]))
 ```
 
 
