@@ -4,7 +4,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=60), tidy=TRUE)
 library(tidyr)
 library(tidyverse)
 library(ggplot2)
@@ -19,10 +19,8 @@ chol$stage <-as.factor(chol$stage)
 chol$id <- as.factor(chol$id)
 
 #removing the NA cakuse and dividing age by 365 to make more legible 
-chol1 <- rmna %>% 
-  mutate(age = age/365)
-rmna <- chol %>% 
-  na.omit(noCL)
+chol1 <- chol %>% na.omit(cholangitis)
+chol1 <- chol1 %>% mutate(age = age/365)
 #str(chol)
 ```
 We are removing all of the NA values that would skew our results. We are also dividing age by 365 to make the data a lot easier to understand. 
@@ -30,40 +28,45 @@ We are removing all of the NA values that would skew our results. We are also di
 ###Visualization
 ```{r}
 #Boxplot with variables drug and n_days
-Box<- chol1 %>% 
+drug.box<- chol1 %>% 
   ggplot(aes(drug, n_days)) + geom_boxplot()
+drug.box
 ```
 
 
 ```{r}
 #bar graph with that shows drug, placebo, and NA and the participants status 
-bar<- chol1 %>% 
+status.bar<- chol1 %>% 
   ggplot(aes(status)) + geom_bar() +
   facet_grid(.~drug)
+status.bar
 ```
-It is intresting to note that with the D-penicillin drug and placebo drug, the results are fairly the same. There are almost the same number of alive and dead patients for both as well as those who have received a liver transplant. 
+It is interesting to note that with the D-penicillin drug and placebo drug, the results are fairly the same. There are almost the same number of alive and dead patients for both as well as those who have received a liver transplant. 
 
 ```{r}
-boxplot <- chol1 %>% 
-  ggplot(aes(status, age/365)) + 
+age.box <- chol1 %>% 
+  ggplot(aes(status, age)) + 
   geom_boxplot() +
   ylab('Age') + xlab('Status')
+age.box
   
 ```
-The key point to note in the boxplot isthat the younger aged demogrpahic is  the ones who have recieved the liver transplant. 
+The key point to note in the boxplot isthat the younger aged demogrpahic is the ones who have received the liver transplant. 
 
 ```{r}
 chol1 %>% 
   ggplot(aes(status)) + geom_bar() + facet_grid(.~sex) + theme_bw()
 
 ```
-There are more female patients that survied compared to male though there was a lot more female patients to begin with. 
+There are more female patients that survived compared to male though there 
+was a lot more female patients to begin with. Because there are so few male
+participants im not sure if sex will be a good explanatory variable to use.
 
 ```{r}
 chol1 %>% 
 ggplot(aes(x = drug, fill = status)) + geom_bar() + 
   xlab("Tyoe of Drug") + 
-  ggtitle("Drug Treatment") + 
+  ggtitle("Treatment") + 
   theme_bw()
 ```
 ```{r}
@@ -73,6 +76,11 @@ ggplot(chol1, aes(x = n_days, color = drug)) + geom_density() +
   geom_vline(xintercept = mean(filter(chol1, drug == 'D-penicillamine')$n_days), color = 'red', linetype="dotted") + 
   geom_vline(xintercept = mean(filter(chol1, drug == 'Placebo')$n_days), color = 'green', linetype="dotted") + theme_bw()
 ```
+
+This graph shows the same data as the first boxplot but the lines help to
+visualize the changes in the data over n_days while the boxplot is more useful 
+for visualizing the means and IQR of the two drug groups.
+
 
 ```{r}
 #Create a pairs plot of the continuous variables in the dataset
@@ -86,7 +94,7 @@ Multivariable Regression
 noCL <- chol %>% 
   filter(status != 'CL')
 ```
-Filtering out the status of the patients to remove anybody who recieved a liver transplant because it cures the patients with primary biliary cholangitis. 
+Filtering out the status of the patients to remove anybody who received a liver transplant because it cures the patients with primary biliary cholangitis. 
 
 
 ```{r}
@@ -106,7 +114,7 @@ ci_cont
 
 
 ```
-We are filtering our data by quarantines 
+We are filtering our data by quantiles to prevent any unnecessary outliers from skewing the data.
 
 
 
