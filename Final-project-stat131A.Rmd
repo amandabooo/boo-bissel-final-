@@ -1,6 +1,8 @@
 ---
 title: "Final Project Stat131A"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -91,12 +93,6 @@ pairs(cont_var)
 ```
 
 Multivariable Regression
-```{r}
-noCL <- chol %>% 
-  filter(status != 'CL')
-```
-Filtering out the status of the patients to remove anybody who received a liver transplant because it cures the patients with primary biliary cholangitis. 
-
 
 ```{r}
 quantile_limits <- function(df, lb, ub){
@@ -113,48 +109,62 @@ quantile_limits <- function(df, lb, ub){
 ci_cont <- quantile_limits(cont_var, 0.001, 0.999)
 ci_cont
 
-ci_95 <- quantile_limits(cont_var, 0.025, 0.975)
 
 
 ```
 We are filtering our data by quantiles to prevent any unnecessary outliers from skewing the data.
 
 ```{r}
-bil <- ggplot(chol1, aes(x = bilirubin, color = drug)) + geom_density() + ggtitle("Bilirubin Over Time") + theme(axis.text.x = element_text(angle = 45)) 
-
-chl <- ggplot(chol1, aes(x = cholesterol, color = drug)) + geom_density() + ggtitle("Cholesterol Over Time") + theme(axis.text.x = element_text(angle = 45))
-
-alb <- ggplot(chol1, aes(x = albumin, color = drug)) + geom_density() + ggtitle("Albumin Over Time") + theme(axis.text.x = element_text(angle = 45))
-
-cop <- ggplot(chol1, aes(x = copper, color = drug)) + geom_density() + ggtitle("Copper Over Time") + theme(axis.text.x = element_text(angle = 45))
-
-plot_grid(b, chl, a, cu)
+library(cowplot)
 ```
+ 
+
+ 
 ```{r}
-library(leaps)
-no_id_refined_logs <- logs_only[, -c(1)]
-cholregsub <- regsubsets(n_days ~., no_id_refined_logs, nvmax = 28) 
+ bil <- ggplot(chol1, aes(x = bilirubin, color = drug)) + geom_density() + theme_bw()
+ 
+ chl <- ggplot(chol1, aes(x = cholesterol, color = drug)) + geom_density()+ theme_bw()
+ 
+ alb <- ggplot(chol1, aes(x = albumin, color = drug)) + geom_density()  + theme_bw()
+ 
+ cop <- ggplot(chol1, aes(x = copper, color = drug)) + geom_density()  + theme_bw()
+ 
+ ak <- ggplot(chol1, aes(x = alk_phos, color = drug)) +
+   geom_density()  +
+   theme_bw()
+
+sg <- ggplot(chol1, aes(x = sgot, color = drug)) + geom_density()  + theme_bw()
+
+tri <- ggplot(chol1, aes(x = tryglicerides, color = drug)) + geom_density()  + theme_bw()
+
+pl <- ggplot(chol1, aes(x = platelets, color = drug)) + geom_density() + theme_bw()
+
+ 
+plot_grid(bil, chl, alb, cop, ak, sg, tri, pl)
 ```
 
 ```{r}
-cont_var_trans <- refined_df[, -c(1, 3, 4, 6:12, 14:17, 20)]
-logs_only <- refined_df[, -c(11, 12, 14:17)]
-full_lm <- lm(n_days ~ ., data = logs_only[, -c(1)])
-summary(full_lm)
+chol_pca <- prcomp(chol1[, -c(1, 3, 4, 6:12, 14:17, 20)], center = TRUE, scale = F)
+summary(chol_pca)
 ```
 
 ```{r}
-summary(lm(formula = n_days ~ drug + ascites + edema + albumin + platelets + 
-    stage + log_bilirubin + log_cholesterol + log_alk_phos + log_sgot, data = logs_only[, 
-    -c(1)]))
+df1 <- chol1[, -c(11, 12, 14:17)]
+#non_logs <- 
+wise <- lm(n_days ~ ., data = df1[, -c(1)])
+summary(wise)
+
+step(wise, direction = "both")
 ```
 
+```{r}
+lm <-lm(formula = n_days ~ status + edema + albumin + prothrombin + 
+    stage + bilirubin + copper + alk_phos, data = chol1[, 
+    -c(1)])
+summary(lm)
+```
 
-
-graph drug treatments and survival by disease stage 
-
-find out how to remove outliers from dataset first before grphing 
-
-graph density plot for everything that is not factor compaing it to drug 
-
-log all results and facet wrap it to see a better normal distribution 
+```{r}
+plot(lm)
+```
+There are obvious violation with the outliers that are present by a few data points but follows a normal linear pattern in the QQ plot. There is hardly correlation on the scale-location plot and a weak correlation on the leverage vs residuals plot. The residual vs fitted plot also have a non-linear relatioship as there is a dip with most of the data points, but it could be the putliers that are impacting that shape of the graph. 
